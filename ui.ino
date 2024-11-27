@@ -132,67 +132,6 @@ int sd_init() {
   return 0;
 }
 
-void displayPhoto(char fileGroup, int16_t x, int16_t y) {
-  // String filePath = "/" + String(fileGroup + "-" + String(photoCount) + ".bmp");
-  photoCount++;
-  File file = SD.open("/a-1.bmp");
-  // Serial.println(filePath);
-  if (!file) {
-    Serial.println("Error opening file!");
-    isLooping = false;
-    return;
-  }
-
-  read32(file);
-  read32(file);
-  uint32_t offset = read32(file);
-
-  read32(file);
-  uint32_t width = read32(file);
-  uint32_t height = read32(file);
-
-  // if (read16(file) != 1) {
-  //   Serial.println("File is not a 24-bit bitmap!");
-  //   isLooping = false;
-  //   return;
-  // }
-
-  file.seek(offset);
-
-  uint16_t rowSize = (width * 3 + 3) & ~3;
-  uint8_t row[rowSize];
-
-  for (uint16_t rowNumber = height; rowNumber > 0; rowNumber--) {
-    file.read(row, rowSize);
-
-    for (uint16_t colNumber = 0; colNumber < width; colNumber++) {
-      uint8_t b = row[3 * colNumber + 0];
-      uint8_t g = row[3 * colNumber + 1];
-      uint8_t r = row[3 * colNumber + 2];
-
-      lcd.drawPixel(colNumber + x, rowNumber - 1 + y, lcd.color565(r, g, b));
-    }
-  }
-
-  // redrawHomeButton();
-}
-
-uint16_t read16(File &f) {
-  uint16_t result;
-  ((uint8_t *)&result)[0] = f.read();
-  ((uint8_t *)&result)[1] = f.read();
-  return result;
-}
-
-uint32_t read32(File &f) {
-  uint32_t result;
-  ((uint8_t *)&result)[0] = f.read();
-  ((uint8_t *)&result)[1] = f.read();
-  ((uint8_t *)&result)[2] = f.read();
-  ((uint8_t *)&result)[3] = f.read();
-  return result;
-}
-
 //5inch and 7inch: 800*480
 static lv_color_t disp_draw_buf1[800 * 480 / 8];
 static lv_color_t disp_draw_buf2[800 * 480 / 8];
@@ -318,40 +257,38 @@ void setup() {
 
 void onKedarnathPressed(lv_event_t *e) {
   currentSet = 'a';
-  isLooping=true;
+  isLooping = true;
 };
 void onFamilyPressed(lv_event_t *e) {
   currentSet = 'b';
-  isLooping=true;
+  isLooping = true;
 };
 void onFourPeoplePressed(lv_event_t *e) {
   currentSet = 'c';
-  isLooping=true;
+  isLooping = true;
 };
 void onRishikeshPressed(lv_event_t *e) {
   currentSet = 'd';
-  isLooping=true;
+  isLooping = true;
 };
 void onHomePressed(lv_event_t *e) {
   currentSet = 'e';
-  isLooping=true;
+  isLooping = true;
 };
 void onOtherFriendsPressed(lv_event_t *e) {
   currentSet = 'f';
-  isLooping=true;
+  isLooping = true;
 };
 
 unsigned long lastUpdateTime = 0;
 const unsigned long updateInterval = 5000;  // 5 seconds
 
 void loop() {
-  lv_timer_handler(); 
+  lv_timer_handler();
   unsigned long currentMillis = millis();
 
-  if (currentMillis - lastUpdateTime >= updateInterval) {
-    if (isLooping) {
-      displayPhoto(currentSet, 0, 0);  // Display the next photo
-    }
-    lastUpdateTime = currentMillis;
+  if (isLooping) {
+    lcd.drawBmpFile(SD, "/a-1.bmp", 0, 0);  // Load BMP image at coordinates (0, 0)
+    isLooping=false;
   }
 }
