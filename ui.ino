@@ -1,81 +1,124 @@
-/**************************CrowPanel ESP32 HMI Display Example Code************************
-Version     :	1.1
-Suitable for:	CrowPanel ESP32 HMI Display
-Product link:	https://www.elecrow.com/esp32-display-series-hmi-touch-screen.html
-Code	  link:	https://github.com/Elecrow-RD/CrowPanel-ESP32-Display-Course-File
-Lesson	link:	https://www.youtube.com/watch?v=WHfPH-Kr9XU
-Description	:	The code is currently available based on the course on YouTube, 
-				        if you have any questions, please refer to the course video: Introduction 
-				        to ask questions or feedback.
-**************************************************************/
+#include <lvgl.h>
 
+//if you want to add the UI file to this project, please remember include ui.h
+#include "ui.h"
+
+//if you want to use the LVGL demo. you need to include <demos/lv_demos.h> and <examples/lv_examples.h>. if not, please do not include it. It will waste your Flash space.
+//#include <demos/lv_demos.h>
+//#include <examples/lv_examples.h>
 
 #include <Wire.h>
 #include <SPI.h>
 #include <SD.h>
-
-/**************************LVGL and UI************************
-if you want to use the LVGL demo. you need to include <demos/lv_demos.h> and <examples/lv_examples.h>. 
-if not, please do not include it. It will waste your Flash space.
-**************************************************************/
-#include <lvgl.h>
-#include "ui.h"
-#include "ui_events.c"
-// #include <demos/lv_demos.h>
-// #include <examples/lv_examples.h>
-/**************************LVGL and UI END************************/
-
-/*******************************************************************************
-   Config the display panel and touch panel in gfx_conf.h
- ******************************************************************************/
-#include "gfx_conf.h"
 
 #define SD_MOSI 11
 #define SD_MISO 13
 #define SD_SCK 12
 #define SD_CS 10
 
-SPIClass SD_SPI;
 
-char currentGroup = '\0';
+/*******************************************************************************
+ ******************************************************************************/
+#define TFT_BL 2
+#define LGFX_USE_V1
+#include <LovyanGFX.hpp>
+#include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
+#include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
+class LGFX : public lgfx::LGFX_Device {
+public:
+
+  lgfx::Bus_RGB _bus_instance;
+  lgfx::Panel_RGB _panel_instance;
+
+  LGFX(void) {
+
+
+    {
+      auto cfg = _bus_instance.config();
+      cfg.panel = &_panel_instance;
+
+      //Please modify the pins according to the circuit diagram. The pins are not the same for the 4.3-inch, 5-inch, and 7-inch screens.
+      cfg.pin_d0 = GPIO_NUM_15;  // B0
+      cfg.pin_d1 = GPIO_NUM_7;   // B1
+      cfg.pin_d2 = GPIO_NUM_6;   // B2
+      cfg.pin_d3 = GPIO_NUM_5;   // B3
+      cfg.pin_d4 = GPIO_NUM_4;   // B4
+
+      cfg.pin_d5 = GPIO_NUM_9;   // G0
+      cfg.pin_d6 = GPIO_NUM_46;  // G1
+      cfg.pin_d7 = GPIO_NUM_3;   // G2
+      cfg.pin_d8 = GPIO_NUM_8;   // G3
+      cfg.pin_d9 = GPIO_NUM_16;  // G4
+      cfg.pin_d10 = GPIO_NUM_1;  // G5
+
+      cfg.pin_d11 = GPIO_NUM_14;  // R0
+      cfg.pin_d12 = GPIO_NUM_21;  // R1
+      cfg.pin_d13 = GPIO_NUM_47;  // R2
+      cfg.pin_d14 = GPIO_NUM_48;  // R3
+      cfg.pin_d15 = GPIO_NUM_45;  // R4
+
+      cfg.pin_henable = GPIO_NUM_41;
+      cfg.pin_vsync = GPIO_NUM_40;
+      cfg.pin_hsync = GPIO_NUM_39;
+      cfg.pin_pclk = GPIO_NUM_0;
+      //------------Pin Config END--------------------
+
+      cfg.freq_write = 16000000;
+
+      cfg.hsync_polarity = 0;
+      cfg.hsync_front_porch = 40;
+      cfg.hsync_pulse_width = 48;
+      cfg.hsync_back_porch = 40;
+
+      cfg.vsync_polarity = 0;
+      cfg.vsync_front_porch = 1;
+      cfg.vsync_pulse_width = 31;
+      cfg.vsync_back_porch = 13;
+
+      cfg.pclk_active_neg = 1;
+      cfg.de_idle_high = 0;
+      cfg.pclk_idle_high = 0;
+
+      _bus_instance.config(cfg);
+    }
+    {
+      auto cfg = _panel_instance.config();
+      //5inch and 7inch: 800*480
+      cfg.memory_width = 800;
+      cfg.memory_height = 480;
+      cfg.panel_width = 800;
+      cfg.panel_height = 480;
+      cfg.offset_x = 0;
+      cfg.offset_y = 0;
+      _panel_instance.config(cfg);
+    }
+    _panel_instance.setBus(&_bus_instance);
+    setPanel(&_panel_instance);
+  }
+};
+
+
+LGFX lcd;
+/*******************************************************************************
+   End of Arduino_GFX setting
+ ******************************************************************************/
+
+
+/*******************************************************************************
+   Please config the touch panel in touch.h
+ ******************************************************************************/
+#include "touch.h"
+
+/* Change to your screen resolution */
+static uint32_t screenWidth;
+static uint32_t screenHeight;
+static lv_disp_draw_buf_t draw_buf;
+
+char currentSet = '\0';
 bool isLooping = false;
 int photoCount = 1;
 
-static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
-static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
-static lv_disp_drv_t disp_drv;
-
-
-/* Display flushing */
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);
-
-  tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-
-  lv_disp_flush_ready(disp);
-}
-
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
-  uint16_t touchX, touchY;
-  bool touched = tft.getTouch(&touchX, &touchY);
-  if (!touched) {
-    data->state = LV_INDEV_STATE_REL;
-  } else {
-    data->state = LV_INDEV_STATE_PR;
-
-    /*Set the coordinates*/
-    data->point.x = touchX;
-    data->point.y = touchY;
-
-    Serial.print("Data x ");
-    Serial.println(touchX);
-
-    Serial.print("Data y ");
-    Serial.println(touchY);
-  }
-}
+SPIClass SD_SPI;
 
 int sd_init() {
   //SD_SPI.begin(SD_SCK, SD_MISO, SD_MOSI);
@@ -89,58 +132,11 @@ int sd_init() {
   return 0;
 }
 
-void setup() {
-  Serial.begin(9600);
-  Serial.println("LVGL Widgets Demo");
-
-  //Display Prepare
-  tft.begin();
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextSize(2);
-  delay(200);
-
-  lv_init();
-
-  delay(100);
-
-  lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
-  /* Initialize the display */
-  lv_disp_drv_init(&disp_drv);
-  /* Change the following line to your display resolution */
-  disp_drv.hor_res = screenWidth;
-  disp_drv.ver_res = screenHeight;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.full_refresh = 1;
-  disp_drv.draw_buf = &draw_buf;
-  lv_disp_drv_register(&disp_drv);
-
-  /* Initialize the (dummy) input device driver */
-  static lv_indev_drv_t indev_drv;
-  lv_indev_drv_init(&indev_drv);
-  indev_drv.type = LV_INDEV_TYPE_POINTER;
-  indev_drv.read_cb = my_touchpad_read;
-  lv_indev_drv_register(&indev_drv);
-
-  tft.fillScreen(TFT_BLACK);
-
-  if (sd_init() == 0) {
-    Serial.println("TF init success");
-  } else {
-    Serial.println("TF init fail");
-  }
-
-  //please do not use LVGL Demo and UI export from Squareline Studio in the same time.
-  // lv_demo_widgets();    // LVGL demo
-  ui_init();
-
-  Serial.println("Setup done");
-}
-
 void displayPhoto(char fileGroup, int16_t x, int16_t y) {
-  String filePath = "/" + String(fileGroup + "-" + String(photoCount) + ".bmp");
+  // String filePath = "/" + String(fileGroup + "-" + String(photoCount) + ".bmp");
   photoCount++;
-  File file = SD.open(filePath);
-
+  File file = SD.open("/a-1.bmp");
+  // Serial.println(filePath);
   if (!file) {
     Serial.println("Error opening file!");
     isLooping = false;
@@ -155,11 +151,11 @@ void displayPhoto(char fileGroup, int16_t x, int16_t y) {
   uint32_t width = read32(file);
   uint32_t height = read32(file);
 
-  if (read16(file) != 1) {
-    Serial.println("File is not a 24-bit bitmap!");
-    isLooping = false;
-    return;
-  }
+  // if (read16(file) != 1) {
+  //   Serial.println("File is not a 24-bit bitmap!");
+  //   isLooping = false;
+  //   return;
+  // }
 
   file.seek(offset);
 
@@ -174,11 +170,11 @@ void displayPhoto(char fileGroup, int16_t x, int16_t y) {
       uint8_t g = row[3 * colNumber + 1];
       uint8_t r = row[3 * colNumber + 2];
 
-      tft.drawPixel(colNumber + x, rowNumber - 1 + y, tft.color565(r, g, b));
+      lcd.drawPixel(colNumber + x, rowNumber - 1 + y, lcd.color565(r, g, b));
     }
   }
 
-  redrawHomeButton();
+  // redrawHomeButton();
 }
 
 uint16_t read16(File &f) {
@@ -197,25 +193,165 @@ uint32_t read32(File &f) {
   return result;
 }
 
-void redrawHomeButton(){
-  ui_home1 = lv_btn_create(lv_scr_act());
-    lv_obj_set_width(ui_home1, 50);
-    lv_obj_set_height(ui_home1, 50);
-    lv_obj_set_x(ui_home1, -361);
-    lv_obj_set_y(ui_home1, -204);
-    lv_obj_set_align(ui_home1, LV_ALIGN_CENTER);
-    lv_obj_set_style_bg_img_src(ui_home1, &ui_img_home2_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+//5inch and 7inch: 800*480
+static lv_color_t disp_draw_buf1[800 * 480 / 8];
+static lv_color_t disp_draw_buf2[800 * 480 / 8];
+
+//static lv_color_t disp_draw_buf;
+static lv_disp_drv_t disp_drv;
+
+/* Display flushing */
+void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) {
+  uint32_t w = (area->x2 - area->x1 + 1);
+  uint32_t h = (area->y2 - area->y1 + 1);
+
+  //lcd.startWrite();
+  //lcd.setAddrWindow( area->x1, area->y1, w, h );
+  //lcd.pushColors( ( uint16_t * )&color_p->full, w * h, true );
+  //lcd.writePixels((lgfx::rgb565_t *)&color_p->full, w * h);
+  //lcd.endWrite();
+
+  lcd.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
+
+  lv_disp_flush_ready(disp);
 }
 
-void loop() {
-  lv_timer_handler();
-  delay(5);
+void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
+  if (touch_has_signal()) {
+    if (touch_touched()) {
+      data->state = LV_INDEV_STATE_PR;
 
-  if (photoCount > 10) {
-    photoCount = 1;
+      /*Set the coordinates*/
+      data->point.x = touch_last_x;
+      data->point.y = touch_last_y;
+      Serial.print("Data x :");
+      Serial.println(touch_last_x);
+
+      Serial.print("Data y :");
+      Serial.println(touch_last_y);
+    } else if (touch_released()) {
+      data->state = LV_INDEV_STATE_REL;
+    }
+  } else {
+    data->state = LV_INDEV_STATE_REL;
   }
-  
-  if (isLooping) {
-    displayPhoto(currentGroup, 0, 0);
+  delay(15);
+}
+
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("LVGL Widgets Demo");
+
+  //IO口引脚
+  pinMode(38, OUTPUT);
+  digitalWrite(38, LOW);
+  pinMode(17, OUTPUT);
+  digitalWrite(17, LOW);
+  pinMode(18, OUTPUT);
+  digitalWrite(18, LOW);
+  pinMode(42, OUTPUT);
+  digitalWrite(42, LOW);
+
+
+  // Init Display
+  lcd.begin();
+  lcd.fillScreen(TFT_BLACK);
+  lcd.setTextSize(2);
+  delay(200);
+
+  //  lcd.fillScreen(TFT_REDRED);
+  //  delay(500);
+  //  lcd.fillScreen(TFT_REDGREEN);
+  //  delay(500);
+  //  lcd.fillScreen(TFT_REDBLUE);
+  //  delay(500);
+  //  lcd.fillScreen(TFT_BLACK);
+  //  delay(500);
+
+  lv_init();
+
+  delay(100);
+  touch_init();
+
+  screenWidth = lcd.width();
+  screenHeight = lcd.height();
+
+  lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 8);
+  /* Initialize the display */
+  lv_disp_drv_init(&disp_drv);
+  /* Change the following line to your display resolution */
+  disp_drv.hor_res = screenWidth;
+  disp_drv.ver_res = screenHeight;
+  disp_drv.flush_cb = my_disp_flush;
+  disp_drv.full_refresh = 1;
+  disp_drv.draw_buf = &draw_buf;
+  lv_disp_drv_register(&disp_drv);
+
+  /* Initialize the (dummy) input device driver */
+  static lv_indev_drv_t indev_drv;
+  lv_indev_drv_init(&indev_drv);
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
+  indev_drv.read_cb = my_touchpad_read;
+  lv_indev_drv_register(&indev_drv);
+#ifdef TFT_BL
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH);
+#endif
+
+
+  lcd.fillScreen(TFT_BLACK);
+
+  //please do not use LVGL Demo and UI export from Squareline Studio in the same time.
+  //lv_demo_widgets();    // LVGL demo
+  ui_init();  //UI from Squareline Studio
+
+  if (sd_init() == 0) {
+    Serial.println("TF init success");
+  } else {
+    Serial.println("TF init fail");
+  }
+
+
+  Serial.println("Setup done");
+}
+
+void onKedarnathPressed(lv_event_t *e) {
+  currentSet = 'a';
+  isLooping=true;
+};
+void onFamilyPressed(lv_event_t *e) {
+  currentSet = 'b';
+  isLooping=true;
+};
+void onFourPeoplePressed(lv_event_t *e) {
+  currentSet = 'c';
+  isLooping=true;
+};
+void onRishikeshPressed(lv_event_t *e) {
+  currentSet = 'd';
+  isLooping=true;
+};
+void onHomePressed(lv_event_t *e) {
+  currentSet = 'e';
+  isLooping=true;
+};
+void onOtherFriendsPressed(lv_event_t *e) {
+  currentSet = 'f';
+  isLooping=true;
+};
+
+unsigned long lastUpdateTime = 0;
+const unsigned long updateInterval = 5000;  // 5 seconds
+
+void loop() {
+  lv_timer_handler(); 
+  unsigned long currentMillis = millis();
+
+  if (currentMillis - lastUpdateTime >= updateInterval) {
+    if (isLooping) {
+      displayPhoto(currentSet, 0, 0);  // Display the next photo
+    }
+    lastUpdateTime = currentMillis;
   }
 }
