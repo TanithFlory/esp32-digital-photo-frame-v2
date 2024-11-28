@@ -257,27 +257,27 @@ void setup() {
 
 void onKedarnathPressed(lv_event_t *e) {
   currentSet = 'a';
-  isLooping = true;
+  showPictures();
 };
 void onFamilyPressed(lv_event_t *e) {
   currentSet = 'b';
-  isLooping = true;
+  showPictures();
 };
 void onFourPeoplePressed(lv_event_t *e) {
   currentSet = 'c';
-  isLooping = true;
+  showPictures();
 };
 void onRishikeshPressed(lv_event_t *e) {
   currentSet = 'd';
-  isLooping = true;
+  showPictures();
 };
 void onHomePressed(lv_event_t *e) {
   currentSet = 'e';
-  isLooping = true;
+  showPictures();
 };
 void onOtherFriendsPressed(lv_event_t *e) {
   currentSet = 'f';
-  isLooping = true;
+  showPictures();
 };
 
 unsigned long lastUpdateTime = 0;
@@ -285,10 +285,13 @@ const unsigned long updateInterval = 5000;  // 5 seconds
 
 void loop() {
   lv_timer_handler();
-  unsigned long currentMillis = millis();
+  delay(5);
+}
 
-  if (isLooping) {
-    lcd.drawBmpFile(SD, "/a-1.bmp", 0, 0);  // Load BMP image at coordinates (0, 0)
-    isLooping=false;
+void showPictures() {
+  for (int i = 1; i <= 10; i++) {
+    String fileName = "/" + String(currentSet) + "-" + String(i) + ".bmp";
+    lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);  // Load BMP image at coordinates (0, 0)
+    delay(5000);
   }
 }

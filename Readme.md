@@ -15,7 +15,7 @@
    - Install the following libraries:
      - **lovyanGfx**: Latest version (Preferred)
      - **lvgl**: Version 8.3.11
-     - **tamc-g6911**: Latest version (Preferred)
+     - **TAMC-GT911**: Latest version (Preferred)
 
 3. **Select Your ESP32 Board:**
    - Go to `Tools` > `Board` and select your ESP32 board (e.g., ESP32 Dev Module).
