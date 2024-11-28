@@ -115,6 +115,7 @@ static uint32_t screenHeight;
 static lv_disp_draw_buf_t draw_buf;
 
 char currentSet = '\0';
+volatile bool exitLoop = false;
 
 SPIClass SD_SPI;
 
@@ -166,6 +167,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
 
       Serial.print("Data y :");
       Serial.println(touch_last_y);
+      exitLoop = true;
     } else if (touch_released()) {
       data->state = LV_INDEV_STATE_REL;
     }
@@ -293,10 +295,17 @@ void loop() {
 }
 
 void showPictures() {
+  exitLoop = false;
+  _ui_screen_delete(&ui_Screen1);
   for (int i = 1; i <= 10; i++) {
+    if (exitLoop) {
+      Serial.println("User touched the screen, exiting the picture loop.");
+      break;
+    }
+
     String fileName = "/" + String(currentSet) + "-" + String(i) + ".bmp";
     lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);
-    delay(2500);
+    delay(2500);  // Delay between pictures
   }
-  resetUi();
+  ui_init();
 }
