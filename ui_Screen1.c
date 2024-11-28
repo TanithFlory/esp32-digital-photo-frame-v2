@@ -22,10 +22,8 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_bg_img_src(ui_Button1, &ui_img_685164422, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Panel1 = lv_obj_create(ui_Screen1);
-    lv_obj_set_width(ui_Panel1, 700);
+    lv_obj_set_width(ui_Panel1, 800);
     lv_obj_set_height(ui_Panel1, 480);
-    lv_obj_set_x(ui_Panel1, 44);
-    lv_obj_set_y(ui_Panel1, 0);
     lv_obj_set_align(ui_Panel1, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_Panel1, LV_FLEX_FLOW_ROW_WRAP);
     lv_obj_set_flex_align(ui_Panel1, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

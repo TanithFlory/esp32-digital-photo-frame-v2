@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+void onHomeOptionPressed(lv_event_t * e);
 void onKedarnathPressed(lv_event_t * e);
 void onFamilyPressed(lv_event_t * e);
 void onFourPeoplePressed(lv_event_t * e);

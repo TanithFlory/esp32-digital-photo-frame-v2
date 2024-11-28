@@ -115,8 +115,6 @@ static uint32_t screenHeight;
 static lv_disp_draw_buf_t draw_buf;
 
 char currentSet = '\0';
-bool isLooping = false;
-int photoCount = 1;
 
 SPIClass SD_SPI;
 
@@ -280,8 +278,14 @@ void onOtherFriendsPressed(lv_event_t *e) {
   showPictures();
 };
 
-unsigned long lastUpdateTime = 0;
-const unsigned long updateInterval = 5000;  // 5 seconds
+void onHomeOptionPressed(lv_event_t *e) {
+  resetUi();
+}
+
+void resetUi() {
+  _ui_screen_delete(&ui_Screen1);
+  ui_init();
+}
 
 void loop() {
   lv_timer_handler();
@@ -291,7 +295,8 @@ void loop() {
 void showPictures() {
   for (int i = 1; i <= 10; i++) {
     String fileName = "/" + String(currentSet) + "-" + String(i) + ".bmp";
-    lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);  // Load BMP image at coordinates (0, 0)
-    delay(5000);
+    lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);
+    delay(2500);
   }
+  resetUi();
 }

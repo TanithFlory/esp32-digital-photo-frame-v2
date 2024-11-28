@@ -29,12 +29,6 @@ void ui_event_otherFriends(lv_event_t * e);
 lv_obj_t * ui_otherFriends;
 // CUSTOM VARIABLES
 
-
-// SCREEN: ui_Screen2
-void ui_Screen2_screen_init(void);
-lv_obj_t * ui_Screen2;
-// CUSTOM VARIABLES
-
 // EVENTS
 lv_obj_t * ui____initial_actions0;
 
@@ -56,8 +50,7 @@ void ui_event_Button1(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if(event_code == LV_EVENT_RELEASED) {
-        _ui_screen_change(&ui_Screen2, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_Screen2_screen_init);
-        _ui_screen_delete(&ui_Screen1);
+        onHomeOptionPressed(e);
     }
 }
 
@@ -124,7 +117,6 @@ void ui_init(void)
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
     ui_Screen1_screen_init();
-    ui_Screen2_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_Screen1);
 }
