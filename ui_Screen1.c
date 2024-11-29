@@ -11,23 +11,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_img_src(ui_Screen1, &ui_img_background_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Panel2 = lv_obj_create(ui_Screen1);
-    lv_obj_set_width(ui_Panel2, 100);
-    lv_obj_set_height(ui_Panel2, 480);
-    lv_obj_set_x(ui_Panel2, -354);
-    lv_obj_set_y(ui_Panel2, 0);
-    lv_obj_set_align(ui_Panel2, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_Panel2, LV_FLEX_FLOW_COLUMN_WRAP);
-    lv_obj_set_flex_align(ui_Panel2, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_Panel2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Panel2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_Panel2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_row(ui_Panel2, 25, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_column(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Button1 = lv_btn_create(ui_Panel2);
+    ui_Button1 = lv_btn_create(ui_Screen1);
     lv_obj_set_width(ui_Button1, 50);
     lv_obj_set_height(ui_Button1, 50);
     lv_obj_set_x(ui_Button1, -355);
@@ -37,9 +21,11 @@ void ui_Screen1_screen_init(void)
     lv_obj_clear_flag(ui_Button1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_obj_set_style_bg_img_src(ui_Button1, &ui_img_685164422, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Button2 = lv_btn_create(ui_Panel2);
+    ui_Button2 = lv_btn_create(ui_Screen1);
     lv_obj_set_width(ui_Button2, 50);
     lv_obj_set_height(ui_Button2, 50);
+    lv_obj_set_x(ui_Button2, -355);
+    lv_obj_set_y(ui_Button2, -131);
     lv_obj_set_align(ui_Button2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags

@@ -283,7 +283,7 @@ void onGalleryPressed(lv_event_t *e) {
   int photoCount = 1;
 
   _ui_screen_delete(&ui_Screen1);
-
+Serial.println(currentSet);
   // Loop through sets a to f
   while (currentSet <= 'f') {
     // Loop through photoCount 1 to 10
