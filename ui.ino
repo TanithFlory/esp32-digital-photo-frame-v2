@@ -115,7 +115,6 @@ static uint32_t screenHeight;
 static lv_disp_draw_buf_t draw_buf;
 
 char currentSet = '\0';
-volatile bool exitLoop = false;
 
 SPIClass SD_SPI;
 
@@ -167,7 +166,6 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
 
       Serial.print("Data y :");
       Serial.println(touch_last_y);
-      exitLoop = true;
     } else if (touch_released()) {
       data->state = LV_INDEV_STATE_REL;
     }
@@ -280,6 +278,49 @@ void onOtherFriendsPressed(lv_event_t *e) {
   showPictures();
 };
 
+void onGalleryPressed(lv_event_t *e) {
+  char currentSet = 'a';  // Starting set (could be changed dynamically)
+  int photoCount = 1;
+
+  _ui_screen_delete(&ui_Screen1);
+
+  // Loop through sets a to f
+  while (currentSet <= 'f') {
+    // Loop through photoCount 1 to 10
+    while (photoCount <= 10) {
+      // Construct the filename
+      String fileName = "/" + String(currentSet) + "-" + String(photoCount) + ".bmp";
+
+      // Display the image
+      lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);
+
+      // Wait before showing the next image
+      delay(3000);  // Show each image for 3 seconds
+
+      // Exit the loop if we're on 'f' and photoCount is 10
+      if (currentSet == 'f' && photoCount == 10) {
+        Serial.println("Reached the 10th image of set f, exiting gallery.");
+        break;  // Exit the inner loop and stop the gallery
+      }
+
+      // Increment the photoCount to show the next image
+      photoCount++;
+    }
+
+    // Exit the outer loop if we already broke from the inner loop (i.e., when currentSet == 'f' and photoCount == 10)
+    if (currentSet == 'f' && photoCount == 10) {
+      break;
+    }
+
+    // Otherwise, move to the next set
+    currentSet++;
+    photoCount = 1;  // Reset photoCount for the next set
+  }
+
+  // Reinitialize the UI after the loop is finished
+  ui_init();
+}
+
 void onHomeOptionPressed(lv_event_t *e) {
   resetUi();
 }
@@ -295,14 +336,8 @@ void loop() {
 }
 
 void showPictures() {
-  exitLoop = false;
   _ui_screen_delete(&ui_Screen1);
   for (int i = 1; i <= 10; i++) {
-    if (exitLoop) {
-      Serial.println("User touched the screen, exiting the picture loop.");
-      break;
-    }
-
     String fileName = "/" + String(currentSet) + "-" + String(i) + ".bmp";
     lcd.drawBmpFile(SD, fileName.c_str(), 0, 0);
     delay(2500);  // Delay between pictures

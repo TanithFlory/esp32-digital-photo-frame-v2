@@ -4,6 +4,7 @@ SET(SOURCES ui_Screen1.c
     ui_helpers.c
     ui_img_background_png.c
     ui_img_685164422.c
+    ui_img_gallery2_png.c
     ui_img_kedarnath_png.c
     ui_img_family_png.c
     ui_img_fourpeople_png.c

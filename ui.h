@@ -28,8 +28,11 @@ extern "C" {
 // SCREEN: ui_Screen1
 void ui_Screen1_screen_init(void);
 extern lv_obj_t * ui_Screen1;
+extern lv_obj_t * ui_Panel2;
 void ui_event_Button1(lv_event_t * e);
 extern lv_obj_t * ui_Button1;
+void ui_event_Button2(lv_event_t * e);
+extern lv_obj_t * ui_Button2;
 extern lv_obj_t * ui_Panel1;
 void ui_event_kedarnath(lv_event_t * e);
 extern lv_obj_t * ui_kedarnath;
@@ -52,6 +55,7 @@ extern lv_obj_t * ui____initial_actions0;
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE(ui_img_background_png);    // assets/background.png
 LV_IMG_DECLARE(ui_img_685164422);    // assets/home-icon.png
+LV_IMG_DECLARE(ui_img_gallery2_png);    // assets/gallery2.png
 LV_IMG_DECLARE(ui_img_kedarnath_png);    // assets/kedarnath.png
 LV_IMG_DECLARE(ui_img_family_png);    // assets/family.png
 LV_IMG_DECLARE(ui_img_fourpeople_png);    // assets/fourPeople.png
